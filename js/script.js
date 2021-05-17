@@ -32,6 +32,94 @@ ground.checkCollisions = true;
 // skybox.material.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
 // skybox.material.diffuseColor = new BABYLON.Color3(0, 0, 0);
 // skybox.material.specularColor = new BABYLON.Color3(0, 0, 0);
+
+// 3, 4 - Model, Animations
+var inputMap = {};
+scene.actionManager = new BABYLON.ActionManager(scene);
+scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyDownTrigger, function (evt) {
+    inputMap[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+}));
+scene.actionManager.registerAction(new BABYLON.ExecuteCodeAction(BABYLON.ActionManager.OnKeyUpTrigger, function (evt) {
+    inputMap[evt.sourceEvent.key] = evt.sourceEvent.type == "keydown";
+}));
+
+var hero;
+
+BABYLON.SceneLoader.ImportMesh("", "https://assets.babylonjs.com/meshes/", "HVGirl.glb", scene, function (newMeshes, particleSystems, skeletons, animationGroups) {
+    hero = newMeshes[0];
+
+    hero.scaling.scaleInPlace(0.1);
+
+    camera.target = hero;
+
+    var heroSpeed = 0.1;
+    var heroSpeedBackwards = 0.01;
+    var heroRotationSpeed = 0.1;
+
+    var animating = true;
+
+    const walkAnim = scene.getAnimationGroupByName("Walking");
+    const walkBackAnim = scene.getAnimationGroupByName("WalkingBack");
+    const idleAnim = scene.getAnimationGroupByName("Idle");
+    const sambaAnim = scene.getAnimationGroupByName("Samba");
+
+    hero.checkCollisions = true;
+    hero.applyGravity = true;
+    hero.ellipsoid = new BABYLON.Vector3(0.1,0.1,0.1);
+    hero.position = new BABYLON.Vector3(-5, 0.1, -5);
+
+    scene.onBeforeRenderObservable.add(() => {
+        var keydown = false;
+        if (inputMap["w"]) {
+            hero.moveWithCollisions(hero.forward.scaleInPlace(heroSpeed));
+            keydown = true;
+        }
+        if (inputMap["s"]) {
+            hero.moveWithCollisions(hero.forward.scaleInPlace(-heroSpeedBackwards));
+            keydown = true;
+        }
+        if (inputMap["a"]) {
+            hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
+            keydown = true;
+        }
+        if (inputMap["d"]) {
+            hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
+            keydown = true;
+        }
+        if (inputMap["b"]) {
+            keydown = true;
+        }
+
+        if (keydown) {
+            if (!animating) {
+                animating = true;
+                if (inputMap["s"]) {
+                    walkBackAnim.start(true, 1.0, walkBackAnim.from, walkBackAnim.to, false);
+                }
+                else if
+                    (inputMap["b"]) {
+                        sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
+                    }
+                else {
+                    walkAnim.start(true, 1.0, walkAnim.from, walkAnim.to, false);
+                }
+            }
+        }
+        else {
+
+            if (animating) {
+                idleAnim.start(true, 1.0, idleAnim.from, idleAnim.to, false);
+
+                sambaAnim.stop();
+                walkAnim.stop();
+                walkBackAnim.stop();
+
+                animating = false;
+            }
+        }
+    });
+});
+
 engine.runRenderLoop(() => {
     scene.render();
 });
