@@ -24,6 +24,14 @@ ground.scaling = new BABYLON.Vector3(10,1,10);
 
 ground.checkCollisions = true;
 
+// 2 - Skybox
+// var skybox = BABYLON.MeshBuilder.CreateBox("skybox", {size: 500}, scene);
+// skybox.material = new BABYLON.StandardMaterial("skybox", scene);
+// skybox.material.backFaceCulling = false;
+// skybox.material.reflectionTexture = new BABYLON.CubeTexture("res/skybox4", scene);
+// skybox.material.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+// skybox.material.diffuseColor = new BABYLON.Color3(0, 0, 0);
+// skybox.material.specularColor = new BABYLON.Color3(0, 0, 0);
 engine.runRenderLoop(() => {
     scene.render();
 });
