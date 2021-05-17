@@ -120,6 +120,36 @@ BABYLON.SceneLoader.ImportMesh("", "https://assets.babylonjs.com/meshes/", "HVGi
     });
 });
 
+// 5 - Meshes
+const items = [
+    {
+	"name": "boombox",
+	"x": 10,
+	"y": 1,
+	"z": 10,
+	"scale": 100
+    },
+    {
+	"name": "haunted_house",
+	"x": 20,
+	"y": 0,
+	"z": 20,
+	"scale": 100
+    }
+];
+
+items.forEach((item) => {
+    BABYLON.SceneLoader.ImportMeshAsync(null, "https://assets.babylonjs.com/meshes/" + item.name + ".glb", "", scene)
+	.then((res) => {
+	    let mesh = res.meshes[0];
+	    mesh.scaling.scaleInPlace(item.scale);
+	    mesh.position = new BABYLON.Vector3(item.x, item.y, item.z);
+	    res.meshes.forEach(newMesh => {
+		newMesh.checkCollisions = true;
+	    });
+	});
+});
+
 engine.runRenderLoop(() => {
     scene.render();
 });
