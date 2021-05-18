@@ -63,9 +63,9 @@ BABYLON.SceneLoader.ImportMesh("", "https://assets.babylonjs.com/meshes/", "HVGi
     const idleAnim = scene.getAnimationGroupByName("Idle");
     const sambaAnim = scene.getAnimationGroupByName("Samba");
 
-    hero.checkCollisions = true;
+    hero.checkCollisions = false;
     hero.applyGravity = true;
-    hero.ellipsoid = new BABYLON.Vector3(0.1,0.1,0.1);
+    hero.ellipsoid = new BABYLON.Vector3(0.1,0.1,0.3);
     hero.position = new BABYLON.Vector3(-5, 0.1, -5);
 
     scene.onBeforeRenderObservable.add(() => {
@@ -148,6 +148,70 @@ items.forEach((item) => {
 		newMesh.checkCollisions = true;
 	    });
 	});
+});
+
+// 7 - Exploding Barrels
+var barrel;
+
+BABYLON.SceneLoader.ImportMeshAsync(null, "https://assets.babylonjs.com/meshes/ExplodingBarrel.glb", "", scene)
+    .then((res) => {
+	let mesh = res.meshes[0];
+
+	mesh.scaling.scaleInPlace(0.03);
+	mesh.position = new BABYLON.Vector3(8, 0, 8);
+
+	res.meshes.forEach(newMesh => {
+		newMesh.checkCollisions = true;
+	});
+
+	barrel = res.meshes[0];
+    })
+
+var box = BABYLON.Mesh.CreateBox("box", 2, scene);
+box.isVisible = true;
+box.checkCollisions = true;
+
+scene.registerBeforeRender(() => {
+    if (hero && barrel && box) {
+	box.position = hero.position;
+
+	if (box.intersectsMesh(barrel, false) && !barrel.position._isDirty) {
+	    barrel.dispose();
+	    console.log("meme"); // explosao e destruicao
+	}
+    }
+});
+
+// 8 - Collectibles
+var targets = []
+var cont = 0;
+
+for (let i = 0; i < 10; i++) {
+    BABYLON.SceneLoader.ImportMeshAsync(null, "https://assets.babylonjs.com/meshes/target.glb", "", scene)
+	.then((res) => {
+	    let mesh = res.meshes[0];
+
+	    mesh.scaling.scaleInPlace(0.1 + i * 0.1);
+	    mesh.position = new BABYLON.Vector3(- 15 - i * 2 , 0, - 8 - i);
+
+	    res.meshes.forEach(newMesh => {
+		newMesh.checkCollisions = true;
+	    });
+
+	    mesh.name = i;
+
+	    targets.push(mesh);
+	});
+}
+
+scene.registerBeforeRender(() => {
+    collectNext = scene.getMeshByName(cont);
+    if (box && targets[cont]) {
+	if (box.intersectsMesh(collectNext, true) && !collectNext.position._isDirty){
+	    collectNext.dispose();
+	    cont++;
+	}
+    }
 });
 
 engine.runRenderLoop(() => {
