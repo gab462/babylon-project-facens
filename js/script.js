@@ -152,6 +152,7 @@ items.forEach((item) => {
 
 // 7 - Exploding Barrels
 var barrel;
+var explodeSound = new BABYLON.Sound("explosion", "res/explosion.mp3", scene);
 
 BABYLON.SceneLoader.ImportMeshAsync(null, "https://assets.babylonjs.com/meshes/ExplodingBarrel.glb", "", scene)
     .then((res) => {
@@ -172,19 +173,30 @@ box.isVisible = true;
 box.checkCollisions = true;
 
 scene.registerBeforeRender(() => {
-    if (hero && barrel && box) {
+    if (hero && box) {
 	box.position = hero.position;
 
-	if (box.intersectsMesh(barrel, false) && !barrel.position._isDirty) {
+	if (barrel && box.intersectsMesh(barrel, false) && !barrel.position._isDirty) {
+	    BABYLON.ParticleHelper.CreateAsync("explosion", scene).then((set) => {
+		set.emitterNode = new BABYLON.Vector3(8, 0, 8);
+                set.systems.forEach(s => {
+                    s.disposeOnStop = true;
+                });
+                set.start();
+            });
+
 	    barrel.dispose();
-	    console.log("meme"); // explosao e destruicao
+	    barrel = null;
+
+	    explodeSound.play();
 	}
     }
 });
 
-// 8 - Collectibles
+// 8, 9 - Collectibles
 var targets = []
 var cont = 0;
+var collectSound = new BABYLON.Sound("tan", "res/tan.mp3", scene);
 
 for (let i = 0; i < 10; i++) {
     BABYLON.SceneLoader.ImportMeshAsync(null, "https://assets.babylonjs.com/meshes/target.glb", "", scene)
@@ -206,10 +218,13 @@ for (let i = 0; i < 10; i++) {
 
 scene.registerBeforeRender(() => {
     collectNext = scene.getMeshByName(cont);
-    if (box && targets[cont]) {
+    if (box && collectNext) {
 	if (box.intersectsMesh(collectNext, true) && !collectNext.position._isDirty){
 	    collectNext.dispose();
 	    cont++;
+	    collectSound.play();
+	    const sambaAnim = scene.getAnimationGroupByName("Samba");
+            sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
 	}
     }
 });
