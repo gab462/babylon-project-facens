@@ -13,6 +13,8 @@ camera.attachControl(canvas, true);
 
 const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0));
 
+var gameOver = false;
+
 // 1, 6 - HighMap
 var ground = BABYLON.MeshBuilder.CreateGroundFromHeightMap("ground", "res/ground.png", { radius: 0, subdivisions: 50, minHeight: 0, maxHeight: 10 });
 ground.material = new BABYLON.StandardMaterial("groundMaterial", scene);
@@ -69,54 +71,56 @@ BABYLON.SceneLoader.ImportMesh("", "https://assets.babylonjs.com/meshes/", "HVGi
     hero.position = new BABYLON.Vector3(-5, 0.1, -5);
 
     scene.onBeforeRenderObservable.add(() => {
-        var keydown = false;
-        if (inputMap["w"]) {
-            hero.moveWithCollisions(hero.forward.scaleInPlace(heroSpeed));
-            keydown = true;
-        }
-        if (inputMap["s"]) {
-            hero.moveWithCollisions(hero.forward.scaleInPlace(-heroSpeedBackwards));
-            keydown = true;
-        }
-        if (inputMap["a"]) {
-            hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
-            keydown = true;
-        }
-        if (inputMap["d"]) {
-            hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
-            keydown = true;
-        }
-        if (inputMap["b"]) {
-            keydown = true;
-        }
+	if (!gameOver) {
+            var keydown = false;
+            if (inputMap["w"]) {
+		hero.moveWithCollisions(hero.forward.scaleInPlace(heroSpeed));
+		keydown = true;
+            }
+            if (inputMap["s"]) {
+		hero.moveWithCollisions(hero.forward.scaleInPlace(-heroSpeedBackwards));
+		keydown = true;
+            }
+            if (inputMap["a"]) {
+		hero.rotate(BABYLON.Vector3.Up(), -heroRotationSpeed);
+		keydown = true;
+            }
+            if (inputMap["d"]) {
+		hero.rotate(BABYLON.Vector3.Up(), heroRotationSpeed);
+		keydown = true;
+            }
+            if (inputMap["b"]) {
+		keydown = true;
+            }
 
-        if (keydown) {
-            if (!animating) {
-                animating = true;
-                if (inputMap["s"]) {
-                    walkBackAnim.start(true, 1.0, walkBackAnim.from, walkBackAnim.to, false);
-                }
-                else if
-                    (inputMap["b"]) {
-                        sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
+            if (keydown) {
+		if (!animating) {
+                    animating = true;
+                    if (inputMap["s"]) {
+			walkBackAnim.start(true, 1.0, walkBackAnim.from, walkBackAnim.to, false);
                     }
-                else {
-                    walkAnim.start(true, 1.0, walkAnim.from, walkAnim.to, false);
-                }
+                    else if
+			(inputMap["b"]) {
+                            sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
+			}
+                    else {
+			walkAnim.start(true, 1.0, walkAnim.from, walkAnim.to, false);
+                    }
+		}
             }
-        }
-        else {
+            else {
 
-            if (animating) {
-                idleAnim.start(true, 1.0, idleAnim.from, idleAnim.to, false);
+		if (animating) {
+                    idleAnim.start(true, 1.0, idleAnim.from, idleAnim.to, false);
 
-                sambaAnim.stop();
-                walkAnim.stop();
-                walkBackAnim.stop();
+                    sambaAnim.stop();
+                    walkAnim.stop();
+                    walkBackAnim.stop();
 
-                animating = false;
+                    animating = false;
+		}
             }
-        }
+	}
     });
 });
 
@@ -169,11 +173,11 @@ BABYLON.SceneLoader.ImportMeshAsync(null, "https://assets.babylonjs.com/meshes/E
     })
 
 var box = BABYLON.Mesh.CreateBox("box", 2, scene);
-box.isVisible = true;
+box.isVisible = false;
 box.checkCollisions = true;
 
 scene.registerBeforeRender(() => {
-    if (hero && box) {
+    if (hero && box && !gameOver) {
 	box.position = hero.position;
 
 	if (barrel && box.intersectsMesh(barrel, false) && !barrel.position._isDirty) {
@@ -217,15 +221,45 @@ for (let i = 0; i < 10; i++) {
 }
 
 scene.registerBeforeRender(() => {
-    collectNext = scene.getMeshByName(cont);
-    if (box && collectNext) {
-	if (box.intersectsMesh(collectNext, true) && !collectNext.position._isDirty){
-	    collectNext.dispose();
-	    cont++;
-	    collectSound.play();
-	    const sambaAnim = scene.getAnimationGroupByName("Samba");
-            sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
+    if (!gameOver) {
+	collectNext = scene.getMeshByName(cont);
+	if (box && collectNext) {
+	    if (box.intersectsMesh(collectNext, true) && !collectNext.position._isDirty){
+		collectNext.dispose();
+		cont++;
+		collectSound.play();
+		const sambaAnim = scene.getAnimationGroupByName("Samba");
+		sambaAnim.start(true, 1.0, sambaAnim.from, sambaAnim.to, false);
+	    }
 	}
+    }
+});
+
+// 10 - End Game
+scene.registerBeforeRender(() => {
+    if (cont == 10 && !gameOver) {
+	const samba = scene.getAnimationGroupByName("Samba");
+	samba.start(true, 1.0, samba.from, samba.to, false);
+
+	var endScreen = new BABYLON.GUI.TextBlock();
+	endScreen.fontSize = 100;
+	endScreen.text = "WINNER - " + cont + " coletados!";
+	endScreen.top = "-400px";
+	endScreen.color = "white";
+
+	var resetButton = BABYLON.GUI.Button.CreateSimpleButton("reset", "Restart");
+	resetButton.width = "100px"
+	resetButton.height = "100px"
+	resetButton.background = "white";
+	resetButton.onPointerDownObservable.add(() => {
+	    location.reload();
+	});
+
+	gui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI");
+	gui.addControl(endScreen);
+	gui.addControl(resetButton);
+
+	gameOver = true;
     }
 });
 
