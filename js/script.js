@@ -27,13 +27,13 @@ ground.scaling = new BABYLON.Vector3(10,1,10);
 ground.checkCollisions = true;
 
 // 2 - Skybox
-// var skybox = BABYLON.MeshBuilder.CreateBox("skybox", {size: 500}, scene);
-// skybox.material = new BABYLON.StandardMaterial("skybox", scene);
-// skybox.material.backFaceCulling = false;
-// skybox.material.reflectionTexture = new BABYLON.CubeTexture("res/skybox4", scene);
-// skybox.material.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-// skybox.material.diffuseColor = new BABYLON.Color3(0, 0, 0);
-// skybox.material.specularColor = new BABYLON.Color3(0, 0, 0);
+var skybox = BABYLON.MeshBuilder.CreateBox("skybox", {size: 500}, scene);
+skybox.material = new BABYLON.StandardMaterial("skybox", scene);
+skybox.material.backFaceCulling = false;
+skybox.material.reflectionTexture = new BABYLON.CubeTexture("res/skybox4", scene);
+skybox.material.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+skybox.material.diffuseColor = new BABYLON.Color3(0, 0, 0);
+skybox.material.specularColor = new BABYLON.Color3(0, 0, 0);
 
 // 3, 4 - Model, Animations
 var inputMap = {};
@@ -236,6 +236,8 @@ scene.registerBeforeRender(() => {
 });
 
 // 10 - End Game
+var gui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI");
+
 scene.registerBeforeRender(() => {
     if (cont == 10 && !gameOver) {
 	const samba = scene.getAnimationGroupByName("Samba");
@@ -244,7 +246,7 @@ scene.registerBeforeRender(() => {
 	var endScreen = new BABYLON.GUI.TextBlock();
 	endScreen.fontSize = 100;
 	endScreen.text = "WINNER - " + cont + " coletados!";
-	endScreen.top = "-400px";
+	endScreen.top = "-200px";
 	endScreen.color = "white";
 
 	var resetButton = BABYLON.GUI.Button.CreateSimpleButton("reset", "Restart");
@@ -255,13 +257,23 @@ scene.registerBeforeRender(() => {
 	    location.reload();
 	});
 
-	gui = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("GUI");
 	gui.addControl(endScreen);
 	gui.addControl(resetButton);
 
 	gameOver = true;
     }
 });
+
+// GUI
+if (gui) {
+    var nomeGUI = new BABYLON.GUI.TextBlock();
+    nomeGUI.text = "Gustavo Araujo Borges - 180995";
+    nomeGUI.fontSize = 50;
+    nomeGUI.textHorizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+    nomeGUI.textVerticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+
+    gui.addControl(nomeGUI);
+}
 
 engine.runRenderLoop(() => {
     scene.render();
